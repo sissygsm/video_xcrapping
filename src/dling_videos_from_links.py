@@ -7,7 +7,6 @@ from yt_dlp.utils import DownloadError
 
 import time
 import os
-import sys
 
 # Create downloads directory if it doesn't exist
 DOWNLOADS_DIR = "./downloads"
@@ -27,32 +26,33 @@ def download_pending_links(username, file="pending_links.txt"):
         with open(file_path, "r") as f:
             links = [line.strip() for line in f]
 
+    # Get the url id number to name the mp4 file
+    output_path = os.path.join(user_dir, f'%(original_url.-19:)s.%(ext)s')
+    ydl_opts = {
+        'cookiesfrombrowser': ('firefox', FIREFOX_PROFILE),
+        'outtmpl': output_path,
+        'format': 'bestvideo+bestaudio/best',
+        'merge_output_format': 'mp4',
+        'noplaylist': True
+    }
+    BATCH_SIZE = 50  # X/Twitter Rate-limit links to download 
     while links:
-        link = links.pop()
-        video_id = link.split("/")[-1] # Get the digits from the link
-        output_path = os.path.join(user_dir, f"{video_id}.%(ext)s")
-
-        ydl_opts = {
-            'cookiesfrombrowser': ('firefox', FIREFOX_PROFILE),
-            'outtmpl': output_path,
-            'format': 'bestvideo+bestaudio/best',
-            'merge_output_format': 'mp4',
-            'noplaylist': True
-        }
-        print()
-        try:
-            with YoutubeDL(ydl_opts) as ydl:
-                ydl.download([link])
-        except DownloadError as e:
-            print(f"Error downloading {link}: {e}")
-            links.append(link)
-            with open(file_path, "w") as f:
-                f.write("\n".join(links) + "\n")
-            print("❌ Download stopped due to error. Watch your downloads while you wait...")
-            return
+        len_batch = min(BATCH_SIZE, len(links))
+        batch = [links.pop() for _ in range(len_batch)]
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download(batch)
+        
+        with open(file_path, "w") as f:
+            f.write("\n".join(links) + "\n")
+            
+        if links is []:
+            print(f"All batchs downloaded.")
+            break
+        print(f"Batch downloaded. Rate-limit exceeded -> Wait 10 min or end script")
+        time.sleep(600)  # 10min = 600seg
 
     if os.path.exists(file_path):
-        os.remove(file_path) 
+        os.remove(file_path)
 
 
 download_pending_links(username=X_USERNAME)
