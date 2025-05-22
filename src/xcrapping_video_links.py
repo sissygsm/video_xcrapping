@@ -9,6 +9,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 
 import time
 import os
+import platform
 
 import secrets
 
@@ -18,6 +19,36 @@ if not os.path.exists(DOWNLOADS_DIR):
     os.makedirs(DOWNLOADS_DIR)
 
 
+def get_firefox_profile_path():
+    system = platform.system()
+
+    if system == "Windows":
+        profile_path = os.path.join(
+            os.environ["APPDATA"],"Mozilla", "Firefox", "Profiles", secrets.FIREFOX_PROFILE
+        )
+
+        if not os.path.exists(profile_path):
+            raise FileNotFoundError(f"Firefox profile path does not exist: {profile_path}")
+    elif system == "Linux":
+        # Possible paths
+        classic_path = os.path.expanduser(
+            f"~/.mozilla/firefox/{secrets.FIREFOX_PROFILE}")
+        snap_path = os.path.expanduser(
+            f"~/snap/firefox/common/.mozilla/firefox/{secrets.FIREFOX_PROFILE}")
+
+        # Detect which exists
+        if os.path.exists(classic_path):
+            profile_path = classic_path
+        elif os.path.exists(snap_path):
+            profile_path = snap_path
+        else:
+            raise FileNotFoundError(f"Firefox profile path does not exist: {profile_path}")
+    else:
+        raise OSError(f"Unsupported OS: {system}")
+
+    return profile_path
+
+
 def scrap_links_withFirefox(username):
     # Create user-specific directory
     user_dir = os.path.join(DOWNLOADS_DIR, username)
@@ -25,7 +56,7 @@ def scrap_links_withFirefox(username):
         os.makedirs(user_dir)
 
     # Driver configurations
-    profile_path = f"C:\\Users\\{secrets.PC_USER}\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\{secrets.FIREFOX_PROFILE}"
+    profile_path = get_firefox_profile_path()
     fp = webdriver.FirefoxProfile(profile_path)
     options = webdriver.FirefoxOptions()
     options.profile = fp
