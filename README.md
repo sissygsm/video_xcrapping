@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 - Download **FFmpeg** and add its location to the `PATH` environment variable.
 
-- Install **Firefox** and either create or sign in with your X/Twitter account.
+- Install **Firefox** and either create or sign in with your X/Twitter account. In Linux, reinstalling .deb version is better than snap version because of problems with finding Firefox profiles.
 
 - Log into your X/Twitter account in Firefox to avoid media loading restrictions when accessing the platform without being logged in.
 
