@@ -10,14 +10,13 @@ from webdriver_manager.firefox import GeckoDriverManager
 import time
 import os
 
+import secrets
+
 # Create downloads directory if it doesn't exist
 DOWNLOADS_DIR = "./downloads"
 if not os.path.exists(DOWNLOADS_DIR):
     os.makedirs(DOWNLOADS_DIR)
 
-FIREFOX_PROFILE = 'your_profile_code' + '.default-release'
-PC_USER = 'your_user'
-X_USERNAME = "your_x_username"  # The @ username
 
 def scrap_links_withFirefox(username):
     # Create user-specific directory
@@ -26,12 +25,13 @@ def scrap_links_withFirefox(username):
         os.makedirs(user_dir)
 
     # Driver configurations
-    profile_path = f"C:\\Users\\{PC_USER}\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\{FIREFOX_PROFILE}"
+    profile_path = f"C:\\Users\\{secrets.PC_USER}\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\{secrets.FIREFOX_PROFILE}"
     fp = webdriver.FirefoxProfile(profile_path)
     options = webdriver.FirefoxOptions()
     options.profile = fp
-    driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
-    
+    service = Service(GeckoDriverManager().install())
+    driver = webdriver.Firefox(service=service, options=options)
+
     driver.get(f"https://x.com/{username}/media")
     time.sleep(5)
 
@@ -47,14 +47,14 @@ def scrap_links_withFirefox(username):
                             window.scrollTo(document.body.scrollHeight, 0);
                             window.scrollTo(0, document.body.scrollHeight);""")
         time.sleep(3)
-    
+
     driver.quit()
     return all_links
 
 
 def filter_links(x_links, username):
     media_links = [l for l in x_links if f"/{username}/status/" in l]
-    print(f"\nTotal media links found: {len(tweet_links)}")
+    print(f"\nTotal media links found: {len(media_links)}")
     # Filter by type (videos only)
     video_links = [l for l in media_links if "/video/" in l]
     print(f"\nTotal video links found: {len(video_links)}")
@@ -71,9 +71,9 @@ def save_pending_links(links, username, file="pending_links.txt"):
     with open(file_path, "a") as f:
         for link in links: 
             f.write(link + "\n")    
-    print(f"\n{len(links)} new links saved to {file_path}")
+    print(f"\n{len(links)} new video links saved to {file_path}")
 
 
-x_links = scrap_links_withFirefox(username=X_USERNAME)
-video_links_only = filter_links(x_links, X_USERNAME)
-save_pending_links(video_links_only, X_USERNAME)
+x_links = scrap_links_withFirefox(secrets.X_USERNAME)
+video_links_only = filter_links(x_links, secrets.X_USERNAME)
+save_pending_links(video_links_only, secrets.X_USERNAME)
